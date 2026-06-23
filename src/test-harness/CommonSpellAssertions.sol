@@ -3,28 +3,24 @@ pragma solidity ^0.8.0;
 
 import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 
-import { Ethereum } from "skybase-address-registry/Ethereum.sol";
+import { Ethereum } from "lib/skybase-address-registry/src/Ethereum.sol";
 
-import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
+import { CCTPReceiver } from "lib/xchain-helpers/src/receivers/CCTPReceiver.sol";
+
+import { ChainIdUtils, ChainId } from "../libraries/ChainId.sol";
 
 import { SpellRunner } from "./SpellRunner.sol";
 
 abstract contract CommonSpellAssertions is SpellRunner {
-    using DomainHelpers for Domain;
-
-    function test_payloadBytecodeMatches() public {
-        _assertPayloadBytecodeMatches();
+    function test_ETHEREUM_PayloadBytecodeMatches() public {
+        _assertPayloadBytecodeMatches(ChainIdUtils.Ethereum());
     }
 
-    function _assertPayloadBytecodeMatches() private {
-        mainnet.domain.selectFork();
-
-        address actualPayload = mainnet.payload;
+    function _assertPayloadBytecodeMatches(ChainId chainId) private onChain(chainId) {
+        address actualPayload = chainData[chainId].payload;
         vm.skip(actualPayload == address(0));
         require(_isContract(actualPayload), "PAYLOAD IS NOT A CONTRACT");
-
-        address expectedPayload = deployPayload();
-        require(_isContract(expectedPayload), "EXPECTED PAYLOAD IS NOT A CONTRACT");
+        address expectedPayload = deployPayload(chainId);
 
         uint256 expectedBytecodeSize = expectedPayload.code.length;
         uint256 actualBytecodeSize   = actualPayload.code.length;
@@ -57,6 +53,7 @@ abstract contract CommonSpellAssertions is SpellRunner {
     }
 
     function _getBytecodeMetadataLength(address a) internal view returns (uint256 length) {
+        // The Solidity compiler encodes the metadata length in the last two bytes of the contract bytecode.
         assembly {
             let ptr  := mload(0x40)
             let size := extcodesize(a)
@@ -64,12 +61,13 @@ abstract contract CommonSpellAssertions is SpellRunner {
                 extcodecopy(a, ptr, sub(size, 2), 2)
                 length := mload(ptr)
                 length := shr(240, length)
-                length := add(length, 2)
+                length := add(length, 2)  // The two bytes used to specify the length are not counted in the length
             }
+            // Return zero if the bytecode is shorter than two bytes.
         }
     }
 
-    function _assertSkybaseProxyUsdsBalance(uint256 expected) internal view {
+     function _assertSkybaseProxyUsdsBalance(uint256 expected) internal view {
         assertEq(
             IERC20(Ethereum.USDS).balanceOf(Ethereum.SKYBASE_PROXY),
             expected,

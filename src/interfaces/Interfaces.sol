@@ -8,3 +8,14 @@ interface IStarGuardLike {
     function plot(address addr_, bytes32 tag_) external;
     function exec() external returns (address addr);
 }
+
+interface IExecutor {
+    struct ActionsSet {
+        uint256 executionTime;
+    }
+
+    function actionsSetCount() external view returns (uint256);
+    function getActionsSetById(uint256 id) external view returns (ActionsSet memory);
+    function execute(uint256 id) external;
+    function executeDelegateCall(address target, bytes calldata data) external;
+}

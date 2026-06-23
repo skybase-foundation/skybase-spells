@@ -5,6 +5,8 @@ import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 
 import { Ethereum } from "skybase-address-registry/Ethereum.sol";
 
+import { ChainIdUtils } from "src/libraries/ChainId.sol";
+
 import { SkybaseTestBase } from "src/test-harness/SkybaseTestBase.sol";
 
 import { SkybaseEthereum_20260702 } from "./SkybaseEthereum_20260702.sol";
@@ -23,11 +25,15 @@ contract SkybaseEthereum_20260702Test is SkybaseTestBase {
     }
 
     function test_isExecutable() public view {
-        assertTrue(SkybaseEthereum_20260702(mainnet.payload).isExecutable(), "payload-not-executable");
+        assertTrue(
+            SkybaseEthereum_20260702(chainData[ChainIdUtils.Ethereum()].payload).isExecutable(),
+            "payload-not-executable"
+        );
     }
 
     function test_usdsTransfer() public {
-        SkybaseEthereum_20260702 spell = SkybaseEthereum_20260702(mainnet.payload);
+        SkybaseEthereum_20260702 spell =
+            SkybaseEthereum_20260702(chainData[ChainIdUtils.Ethereum()].payload);
 
         address recipient = Ethereum.SKYBASE_FOUNDATION_OPERATIONAL_MULTISIG;
         uint256 amount    = spell.USDS_TRANSFER_AMOUNT();
