@@ -11,7 +11,8 @@ import { SkybasePayloadEthereum } from "src/libraries/SkybasePayloadEthereum.sol
  * @title   July 02, 2026 Skybase Ethereum Proposal
  * @author  Soter Labs
  * @notice  Transfer Skybase Foundation Grant
- * Forum    https://forum.skyeco.com/t/july-2-2026-proposed-changes-to-skybase-for-upcoming-spell/27973
+ * Forum Post: https://forum.skyeco.com/t/july-2-2026-proposed-changes-to-skybase-for-upcoming-spell/27973
+ * Vote Link:  https://vote.sky.money/polling/QmdXjfm6
  */
 contract SkybaseEthereum_20260702 is SkybasePayloadEthereum {
 
