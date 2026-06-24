@@ -7,7 +7,7 @@ import { console }   from "forge-std/console.sol";
 
 import { Ethereum }  from 'skybase-address-registry/Ethereum.sol';
 
-import { IExecutor } from 'src/interfaces/Interfaces.sol';
+import { IExecutorLike } from 'src/interfaces/Interfaces.sol';
 
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
@@ -29,7 +29,7 @@ abstract contract SpellRunner is Test {
     // ChainData is already taken in StdChains
     struct DomainData {
         address   payload;
-        IExecutor executor;
+        IExecutorLike executor;
         Domain    domain;
         /// @notice on mainnet: empty
         /// on L2s: bridges that'll include txs in the L2. there can be multiple
@@ -141,7 +141,7 @@ abstract contract SpellRunner is Test {
         chainData[ChainIdUtils.Ethereum()].domain.selectFork();
 
         // Set up executor for mainnet
-        chainData[ChainIdUtils.Ethereum()].executor       = IExecutor(Ethereum.SKYBASE_PROXY);
+        chainData[ChainIdUtils.Ethereum()].executor       = IExecutorLike(Ethereum.SKYBASE_PROXY);
 
         // Register mainnet chain
         allChains.push(ChainIdUtils.Ethereum());
@@ -157,15 +157,15 @@ abstract contract SpellRunner is Test {
         // We default to Ethereum domain
         chainData[ChainIdUtils.Ethereum()].domain.selectFork();
 
-        chainData[ChainIdUtils.Ethereum()].executor       = IExecutor(Ethereum.SKYBASE_PROXY);
+        chainData[ChainIdUtils.Ethereum()].executor       = IExecutorLike(Ethereum.SKYBASE_PROXY);
 
         // DEFINE FOREIGN EXECUTORS HERE
 
-        // chainData[ChainIdUtils.Base()].executor        = IExecutor(Base.SKYBASE_EXECUTOR);
-        // chainData[ChainIdUtils.Gnosis()].executor      = IExecutor(Gnosis.SKYBASE_EXECUTOR);
-        // chainData[ChainIdUtils.ArbitrumOne()].executor = IExecutor(Arbitrum.SKYBASE_EXECUTOR);
-        // chainData[ChainIdUtils.Optimism()].executor    = IExecutor(Optimism.SKYBASE_EXECUTOR);
-        // chainData[ChainIdUtils.Unichain()].executor    = IExecutor(Unichain.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.Base()].executor        = IExecutorLike(Base.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.Gnosis()].executor      = IExecutorLike(Gnosis.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.ArbitrumOne()].executor = IExecutorLike(Arbitrum.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.Optimism()].executor    = IExecutorLike(Optimism.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.Unichain()].executor    = IExecutorLike(Unichain.SKYBASE_EXECUTOR);
 
         // CREATE BRIDGES HERE
 
@@ -317,7 +317,7 @@ abstract contract SpellRunner is Test {
 
             // UNCOMMENT AFTER OTHER DOMAINS ARE SET UP
             address mainnetSpellPayload = _getForeignPayloadFromMainnetSpell(chainId);
-            IExecutor executor = chainData[chainId].executor;
+            IExecutorLike executor = chainData[chainId].executor;
             if (mainnetSpellPayload != address(0)) {
                 // We assume the payload has been queued in the executor (will revert otherwise)
                 chainData[chainId].domain.selectFork();
@@ -370,7 +370,7 @@ abstract contract SpellRunner is Test {
 
     function executeMainnetPayload() internal onChain(ChainIdUtils.Ethereum()) {
         address payloadAddress = chainData[ChainIdUtils.Ethereum()].payload;
-        IExecutor executor     = chainData[ChainIdUtils.Ethereum()].executor;
+        IExecutorLike executor     = chainData[ChainIdUtils.Ethereum()].executor;
         require(_isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
 
         bytes32 bytecodeHash = payloadAddress.codehash;

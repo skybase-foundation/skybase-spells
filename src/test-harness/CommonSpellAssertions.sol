@@ -5,8 +5,6 @@ import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 
 import { Ethereum } from "lib/skybase-address-registry/src/Ethereum.sol";
 
-import { CCTPReceiver } from "lib/xchain-helpers/src/receivers/CCTPReceiver.sol";
-
 import { ChainIdUtils, ChainId } from "../libraries/ChainId.sol";
 
 import { SpellRunner } from "./SpellRunner.sol";

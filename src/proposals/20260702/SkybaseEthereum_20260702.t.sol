@@ -9,31 +9,42 @@ import { ChainIdUtils } from "src/libraries/ChainId.sol";
 
 import { SkybaseTestBase } from "src/test-harness/SkybaseTestBase.sol";
 
-import { SkybaseEthereum_20260702 } from "./SkybaseEthereum_20260702.sol";
+import { SkybaseEthereum_20260702 as SkybaseSpell } from "./SkybaseEthereum_20260702.sol";
 
 contract SkybaseEthereum_20260702Test is SkybaseTestBase {
-
+    
+    SkybaseSpell internal SKYBASE_SPELL;
+    address internal DEPLOYER;
+    
     address internal sender = Ethereum.SKYBASE_PROXY;
 
     constructor() {
         id = "20260702";
     }
 
+    function _setupAddresses() internal virtual {
+        DEPLOYER = makeAddr("DEPLOYER");
+        vm.prank(DEPLOYER);
+        SKYBASE_SPELL = new SkybaseSpell();
+    }
+
     function setUp() public {
         // June 19, 2026
         setupMainnetDomain(25_350_201);
+        _setupAddresses();
+
+        chainData[ChainIdUtils.Ethereum()].payload = address(SKYBASE_SPELL);
     }
 
     function test_isExecutable() public view {
         assertTrue(
-            SkybaseEthereum_20260702(chainData[ChainIdUtils.Ethereum()].payload).isExecutable(),
+            SkybaseSpell(chainData[ChainIdUtils.Ethereum()].payload).isExecutable(),
             "payload-not-executable"
         );
     }
 
     function test_usdsTransfer() public {
-        SkybaseEthereum_20260702 spell =
-            SkybaseEthereum_20260702(chainData[ChainIdUtils.Ethereum()].payload);
+        SkybaseSpell spell = SkybaseSpell(chainData[ChainIdUtils.Ethereum()].payload);
 
         address recipient = Ethereum.SKYBASE_FOUNDATION_OPERATIONAL_MULTISIG;
         uint256 amount    = spell.USDS_TRANSFER_AMOUNT();

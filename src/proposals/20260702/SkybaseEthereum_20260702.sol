@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.25;
+pragma solidity ^0.8.0;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import { Ethereum } from "skybase-address-registry/Ethereum.sol";
+import { Ethereum } from "lib/skybase-address-registry/src/Ethereum.sol";
 
 import { SkybasePayloadEthereum } from "src/libraries/SkybasePayloadEthereum.sol";
+
+interface IERC20Like {
+    function transfer(address to, uint256 amount) external returns (bool);
+}
 
 /**
  * @title   July 02, 2026 Skybase Ethereum Proposal
@@ -17,11 +19,16 @@ import { SkybasePayloadEthereum } from "src/libraries/SkybasePayloadEthereum.sol
 contract SkybaseEthereum_20260702 is SkybasePayloadEthereum {
 
     // Skybase Foundation operational grant: 700,000 USDS (USDS has 18 decimals)
-    // Source: https://forum.skyeco.com/t/july-2-2026-proposed-changes-to-skybase-for-upcoming-spell/27973
     uint256 public constant USDS_TRANSFER_AMOUNT = 700_000e18;
 
     function _execute() internal override {
         // Transfer the grant from the Skybase Proxy to the Skybase Foundation Operational Multisig
-        require(IERC20(Ethereum.USDS).transfer(Ethereum.SKYBASE_FOUNDATION_OPERATIONAL_MULTISIG, USDS_TRANSFER_AMOUNT));
+        // Forum Post: https://forum.skyeco.com/t/july-2-2026-proposed-changes-to-skybase-for-upcoming-spell/27973
+        // Vote Link:  https://vote.sky.money/polling/QmdXjfm6
+        _transferFoundationGrant();
+    }
+
+    function _transferFoundationGrant() private {
+        require(IERC20Like(Ethereum.USDS).transfer(Ethereum.SKYBASE_FOUNDATION_OPERATIONAL_MULTISIG, USDS_TRANSFER_AMOUNT));
     }
 }

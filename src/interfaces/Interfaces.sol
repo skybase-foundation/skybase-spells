@@ -9,7 +9,7 @@ interface IStarGuardLike {
     function exec() external returns (address addr);
 }
 
-interface IExecutor {
+interface IExecutorLike {
     struct ActionsSet {
         uint256 executionTime;
     }

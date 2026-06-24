@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Base smart contract for Skybase Ethereum spells.
@@ -16,7 +16,7 @@ abstract contract SkybasePayloadEthereum {
      * @dev Required, useful for implementing "earliest launch date" or "office hours" strategy
      * @return result The result of the check (true = executable, false = not)
      */
-    function isExecutable() external pure returns (bool result) {
+    function isExecutable() external view returns (bool result) {
         result = true;
     }
 
