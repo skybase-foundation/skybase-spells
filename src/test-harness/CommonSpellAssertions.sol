@@ -7,11 +7,26 @@ import { Ethereum } from "lib/skybase-address-registry/src/Ethereum.sol";
 
 import { ChainIdUtils, ChainId } from "../libraries/ChainId.sol";
 
+import { SkybasePayloadEthereum } from "../libraries/SkybasePayloadEthereum.sol";
+
 import { SpellRunner } from "./SpellRunner.sol";
 
 abstract contract CommonSpellAssertions is SpellRunner {
     function test_ETHEREUM_PayloadBytecodeMatches() public {
         _assertPayloadBytecodeMatches(ChainIdUtils.Ethereum());
+    }
+
+    function test_ETHEREUM_PayloadIsExecutable() public {
+        _assertPayloadIsExecutable(ChainIdUtils.Ethereum());
+    }
+
+    function _assertPayloadIsExecutable(ChainId chainId) private onChain(chainId) {
+        address payload = chainData[chainId].payload;
+        vm.skip(payload == address(0));
+        assertTrue(
+            SkybasePayloadEthereum(payload).isExecutable(),
+            "payload-not-executable"
+        );
     }
 
     function _assertPayloadBytecodeMatches(ChainId chainId) private onChain(chainId) {

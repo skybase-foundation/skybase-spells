@@ -36,13 +36,6 @@ contract SkybaseEthereum_20260702Test is SkybaseTestBase {
         chainData[ChainIdUtils.Ethereum()].payload = address(SKYBASE_SPELL);
     }
 
-    function test_isExecutable() public view {
-        assertTrue(
-            SkybaseSpell(chainData[ChainIdUtils.Ethereum()].payload).isExecutable(),
-            "payload-not-executable"
-        );
-    }
-
     function test_usdsTransfer() public {
         SkybaseSpell spell = SkybaseSpell(chainData[ChainIdUtils.Ethereum()].payload);
 
