@@ -23,14 +23,13 @@ contract SkybaseEthereum_20260702Test is SkybaseTestBase {
     }
 
     function _setupAddresses() internal virtual {
-        DEPLOYER = makeAddr("DEPLOYER");
-        vm.prank(DEPLOYER);
-        SKYBASE_SPELL = new SkybaseSpell();
+        DEPLOYER      = 0x25BaDaA3379ecbc0231be30A3d72F1BEB8eD1009;
+        SKYBASE_SPELL = SkybaseSpell(0xd3e4e16ED515Be794fd181D7d2cEB0447A6f2cb5);
     }
 
     function setUp() public {
-        // June 19, 2026
-        setupMainnetDomain(25_350_201);
+        // June 25, 2026
+        setupMainnetDomain(25_397_676);
         _setupAddresses();
 
         chainData[ChainIdUtils.Ethereum()].payload = address(SKYBASE_SPELL);
