@@ -5,9 +5,9 @@ import { Test }      from "forge-std/Test.sol";
 import { StdChains } from "forge-std/StdChains.sol";
 import { console }   from "forge-std/console.sol";
 
-import { Ethereum }  from 'pattern-address-registry/Ethereum.sol';
+import { Ethereum }  from 'skybase-address-registry/Ethereum.sol';
 
-import { IExecutor } from 'lib/obex-gov-relay/src/interfaces/IExecutor.sol';
+import { IExecutorLike } from 'src/interfaces/Interfaces.sol';
 
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
@@ -18,7 +18,7 @@ import { Bridge, BridgeType }    from "xchain-helpers/testing/Bridge.sol";
 import { RecordedLogs }          from "xchain-helpers/testing/utils/RecordedLogs.sol";
 
 import { ChainIdUtils, ChainId }   from "../libraries/ChainId.sol";
-import { PatternPayloadEthereum }  from "../libraries/PatternPayloadEthereum.sol";
+import { SkybasePayloadEthereum }  from "../libraries/SkybasePayloadEthereum.sol";
 
 import { IStarGuardLike } from "src/interfaces/Interfaces.sol";
 
@@ -29,15 +29,13 @@ abstract contract SpellRunner is Test {
     // ChainData is already taken in StdChains
     struct DomainData {
         address   payload;
-        IExecutor executor;
+        IExecutorLike executor;
         Domain    domain;
         /// @notice on mainnet: empty
         /// on L2s: bridges that'll include txs in the L2. there can be multiple
         /// bridges for a given chain, such as canonical OP bridge and CCTP
         /// USDC-specific bridge
         Bridge[]  bridges;
-        address   prevController;
-        address   newController;
         bool      spellExecuted;
     }
 
@@ -142,10 +140,8 @@ abstract contract SpellRunner is Test {
         chainData[ChainIdUtils.Ethereum()].domain = getChain("mainnet").createFork(mainnetForkBlock);
         chainData[ChainIdUtils.Ethereum()].domain.selectFork();
 
-        // Set up executor and controller for mainnet
-        chainData[ChainIdUtils.Ethereum()].executor       = IExecutor(Ethereum.PATTERN_PROXY);
-        chainData[ChainIdUtils.Ethereum()].prevController = Ethereum.ALM_CONTROLLER;
-        chainData[ChainIdUtils.Ethereum()].newController  = Ethereum.ALM_CONTROLLER;
+        // Set up executor for mainnet
+        chainData[ChainIdUtils.Ethereum()].executor       = IExecutorLike(Ethereum.SKYBASE_PROXY);
 
         // Register mainnet chain
         allChains.push(ChainIdUtils.Ethereum());
@@ -161,20 +157,15 @@ abstract contract SpellRunner is Test {
         // We default to Ethereum domain
         chainData[ChainIdUtils.Ethereum()].domain.selectFork();
 
-        chainData[ChainIdUtils.Ethereum()].executor       = IExecutor(Ethereum.PATTERN_PROXY);
-        chainData[ChainIdUtils.Ethereum()].prevController = Ethereum.ALM_CONTROLLER;
-        chainData[ChainIdUtils.Ethereum()].newController  = Ethereum.ALM_CONTROLLER;
+        chainData[ChainIdUtils.Ethereum()].executor       = IExecutorLike(Ethereum.SKYBASE_PROXY);
 
         // DEFINE FOREIGN EXECUTORS HERE
-        // chainData[ChainIdUtils.Avalanche()].executor       = IExecutor(Avalanche.PATTERN_EXECUTOR);
-        // chainData[ChainIdUtils.Avalanche()].prevController = Avalanche.ALM_CONTROLLER;
-        // chainData[ChainIdUtils.Avalanche()].newController  = Avalanche.ALM_CONTROLLER;
 
-        // chainData[ChainIdUtils.Base()].executor        = IExecutor(Base.PATTERN_EXECUTOR);
-        // chainData[ChainIdUtils.Gnosis()].executor      = IExecutor(Gnosis.PATTERN_EXECUTOR);
-        // chainData[ChainIdUtils.ArbitrumOne()].executor = IExecutor(Arbitrum.PATTERN_EXECUTOR);
-        // chainData[ChainIdUtils.Optimism()].executor    = IExecutor(Optimism.PATTERN_EXECUTOR);
-        // chainData[ChainIdUtils.Unichain()].executor    = IExecutor(Unichain.PATTERN_EXECUTOR);
+        // chainData[ChainIdUtils.Base()].executor        = IExecutorLike(Base.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.Gnosis()].executor      = IExecutorLike(Gnosis.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.ArbitrumOne()].executor = IExecutorLike(Arbitrum.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.Optimism()].executor    = IExecutorLike(Optimism.SKYBASE_EXECUTOR);
+        // chainData[ChainIdUtils.Unichain()].executor    = IExecutorLike(Unichain.SKYBASE_EXECUTOR);
 
         // CREATE BRIDGES HERE
 
@@ -261,7 +252,7 @@ abstract contract SpellRunner is Test {
     }
 
     function spellIdentifier(ChainId chainId) private view returns(string memory) {
-        string memory slug       = string(abi.encodePacked("Pattern", chainId.toDomainString(), "_", id));
+        string memory slug       = string(abi.encodePacked("Skybase", chainId.toDomainString(), "_", id));
         string memory identifier = string(abi.encodePacked(slug, ".sol:", slug));
         return identifier;
     }
@@ -326,7 +317,7 @@ abstract contract SpellRunner is Test {
 
             // UNCOMMENT AFTER OTHER DOMAINS ARE SET UP
             address mainnetSpellPayload = _getForeignPayloadFromMainnetSpell(chainId);
-            IExecutor executor = chainData[chainId].executor;
+            IExecutorLike executor = chainData[chainId].executor;
             if (mainnetSpellPayload != address(0)) {
                 // We assume the payload has been queued in the executor (will revert otherwise)
                 chainData[chainId].domain.selectFork();
@@ -358,7 +349,7 @@ abstract contract SpellRunner is Test {
 
         // RETURN PAYLOAD ADDRESSES FROM THE MAINNET SPELL HERE
 
-        PatternPayloadEthereum spell = PatternPayloadEthereum(chainData[ChainIdUtils.Ethereum()].payload);
+        SkybasePayloadEthereum spell = SkybasePayloadEthereum(chainData[ChainIdUtils.Ethereum()].payload);
         // if (chainId == ChainIdUtils.Avalanche()) {
         //     revert("Unsupported chainId");
             // return spell.PAYLOAD_AVALANCHE();
@@ -379,18 +370,18 @@ abstract contract SpellRunner is Test {
 
     function executeMainnetPayload() internal onChain(ChainIdUtils.Ethereum()) {
         address payloadAddress = chainData[ChainIdUtils.Ethereum()].payload;
-        IExecutor executor     = chainData[ChainIdUtils.Ethereum()].executor;
+        IExecutorLike executor     = chainData[ChainIdUtils.Ethereum()].executor;
         require(_isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
 
         bytes32 bytecodeHash = payloadAddress.codehash;
 
         vm.prank(Ethereum.PAUSE_PROXY);
-        IStarGuardLike(Ethereum.PATTERN_STAR_GUARD).plot({
+        IStarGuardLike(Ethereum.SKYBASE_STAR_GUARD).plot({
             addr_ : payloadAddress,
             tag_  : bytecodeHash
         });
 
-        address payload = IStarGuardLike(Ethereum.PATTERN_STAR_GUARD).exec();
+        address payload = IStarGuardLike(Ethereum.SKYBASE_STAR_GUARD).exec();
 
         require(payload == payloadAddress, "FAILED TO EXECUTE PAYLOAD");
 
